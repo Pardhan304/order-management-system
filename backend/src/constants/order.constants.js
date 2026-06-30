@@ -1,0 +1,11 @@
+export const ORDER_STATUS = {
+  PLACED: "PLACED",
+  PROCESSING: "PROCESSING",
+  READY_TO_SHIP: "READY_TO_SHIP",
+};
+
+export const PAYMENT_STATUS = {
+  PENDING: "PENDING",
+  PAID: "PAID",
+  FAILED: "FAILED",
+};
