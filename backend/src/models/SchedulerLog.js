@@ -6,27 +6,32 @@ const schedulerLogSchema = new mongoose.Schema(
     startedAt: {
       type: Date,
       required: true,
-      default: Date.now,
     },
 
     finishedAt: {
       type: Date,
-      required: true,
+      default: null,
     },
 
     duration: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-
-    ordersScanned: {
       type: Number,
       default: 0,
       min: 0,
     },
 
-    ordersUpdated: {
+    totalOrders: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    successCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    failedCount: {
       type: Number,
       default: 0,
       min: 0,
@@ -36,6 +41,7 @@ const schedulerLogSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(SCHEDULER_STATUS),
       required: true,
+      index: true,
     },
 
     error: {
@@ -45,18 +51,12 @@ const schedulerLogSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: false,
     versionKey: false,
-  }
+  },
 );
 
-// Indexes
 schedulerLogSchema.index({ startedAt: -1 });
-schedulerLogSchema.index({ status: 1 });
 
-const SchedulerLog = mongoose.model(
-  "SchedulerLog",
-  schedulerLogSchema
-);
+const SchedulerLog = mongoose.model("SchedulerLog", schedulerLogSchema);
 
 export default SchedulerLog;

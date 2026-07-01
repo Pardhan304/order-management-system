@@ -1,4 +1,5 @@
 export const SCHEDULER_STATUS = {
+  RUNNING: "RUNNING",
   SUCCESS: "SUCCESS",
   FAILED: "FAILED",
 };

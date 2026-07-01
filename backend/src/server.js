@@ -4,6 +4,7 @@ dotenv.config();
 
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import startSchedulerCron from "./cron/scheduler.cron.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,6 +14,8 @@ const startServer = async () => {
 
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
+              startSchedulerCron();
+
         });
     } catch (error) {
         console.error("Failed to start server");
