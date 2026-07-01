@@ -19,7 +19,7 @@ const orderStatusHistorySchema = new mongoose.Schema(
     fromStatus: {
       type: String,
       enum: Object.values(ORDER_STATUS),
-      required: true,
+      default: null,
     },
 
     toStatus: {
@@ -41,7 +41,7 @@ const orderStatusHistorySchema = new mongoose.Schema(
   },
   {
     versionKey: false,
-  }
+  },
 );
 
 // Indexes
@@ -51,7 +51,7 @@ orderStatusHistorySchema.index({ changedAt: -1 });
 
 const OrderStatusHistory = mongoose.model(
   "OrderStatusHistory",
-  orderStatusHistorySchema
+  orderStatusHistorySchema,
 );
 
 export default OrderStatusHistory;

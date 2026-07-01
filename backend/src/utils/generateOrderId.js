@@ -1,6 +1,6 @@
 import Counter from "../models/Counter.js";
 
-const generateOrderId = async () => {
+const generateOrderId = async (session) => {
   const counter = await Counter.findByIdAndUpdate(
     "orderId",
     {
@@ -9,6 +9,7 @@ const generateOrderId = async () => {
     {
       new: true,
       upsert: true,
+      session,
     },
   );
   return `ORD${counter.sequence.toString().padStart(6, "0")}`;

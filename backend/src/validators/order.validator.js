@@ -1,5 +1,5 @@
-import { body } from "express-validator";
-import { PAYMENT_STATUS } from "../constants/order.constants.js";
+import { body, query } from "express-validator";
+import { ORDER_STATUS, PAYMENT_STATUS } from "../constants/order.constants.js";
 
 export const createOrderValidator = [
   body("customerName")
@@ -23,4 +23,11 @@ export const createOrderValidator = [
     .optional()
     .isIn(Object.values(PAYMENT_STATUS))
     .withMessage("Amount must be greater then 0"),
+];
+
+export const getOrdersValidator = [
+  query("status")
+    .optional()
+    .isIn(Object.values(ORDER_STATUS))
+    .withMessage("Invalid order status"),
 ];
