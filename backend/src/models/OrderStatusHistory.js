@@ -40,7 +40,7 @@ const orderStatusHistorySchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: false,
+    versionKey: false,
   }
 );
 

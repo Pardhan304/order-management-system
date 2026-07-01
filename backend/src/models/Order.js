@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { ORDER_STATUS, PAYMENT_STATUS } from "../constants/order.constants";
+import { ORDER_STATUS, PAYMENT_STATUS } from "../constants/order.constants.js";
 
 
 const orderSchema = new mongoose.Schema(
@@ -56,6 +56,7 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    versionKey: false,
   }
 );
 
