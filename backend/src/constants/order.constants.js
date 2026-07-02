@@ -9,3 +9,8 @@ export const PAYMENT_STATUS = {
   PAID: "PAID",
   FAILED: "FAILED",
 };
+
+export const STATUS_TRANSITIONS = [
+  { from: ORDER_STATUS.PLACED, to: ORDER_STATUS.PROCESSING, afterMinutes: 10 },
+  { from: ORDER_STATUS.PROCESSING, to: ORDER_STATUS.READY_TO_SHIP, afterMinutes: 20 },
+];

@@ -4,25 +4,22 @@ import Order from "../models/Order.js";
 import OrderStatusHistory from "../models/OrderStatusHistory.js";
 import SchedulerLog from "../models/SchedulerLog.js";
 
-import { ORDER_STATUS } from "../constants/order.constants.js";
+import { STATUS_TRANSITIONS } from "../constants/order.constants.js";
 import { CHANGED_BY } from "../constants/history.constants.js";
 import { SCHEDULER_STATUS } from "../constants/scheduler.constants.js";
 
-const processOrder = async (order) => {
+const processOrder = async (order, fromStatus, toStatus) => {
   const session = await mongoose.startSession();
-
   session.startTransaction();
 
   try {
     await Order.findByIdAndUpdate(
       order._id,
       {
-        status: ORDER_STATUS.PROCESSING,
+        status: toStatus,
         statusChangedAt: new Date(),
       },
-      {
-        session,
-      },
+      { session },
     );
 
     await OrderStatusHistory.create(
@@ -30,19 +27,16 @@ const processOrder = async (order) => {
         {
           order: order._id,
           orderId: order.orderId,
-          fromStatus: ORDER_STATUS.PLACED,
-          toStatus: ORDER_STATUS.PROCESSING,
+          fromStatus,
+          toStatus,
           changedBy: CHANGED_BY.SYSTEM,
           changedAt: new Date(),
         },
       ],
-      {
-        session,
-      },
+      { session },
     );
 
     await session.commitTransaction();
-
     return true;
   } catch (error) {
     await session.abortTransaction();
@@ -61,28 +55,45 @@ export const runScheduler = async () => {
   });
 
   try {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-
-    const expiredOrders = await Order.find({
-      status: ORDER_STATUS.PLACED,
-      statusChangedAt: { $lte: tenMinutesAgo },
-    });
-
+    let totalOrders = 0;
     let successCount = 0;
     let failedCount = 0;
+    const transitions = [];
 
-    for (const order of expiredOrders) {
-      try {
-        await processOrder(order);
-        successCount++;
-      } catch (error) {
-        failedCount++;
+    for (const rule of STATUS_TRANSITIONS) {
+      const cutoff = new Date(Date.now() - rule.afterMinutes * 60 * 1000);
 
-        console.error(
-          `Failed to process order ${order.orderId}:`,
-          error.message,
-        );
+      const expiredOrders = await Order.find({
+        status: rule.from,
+        statusChangedAt: { $lte: cutoff },
+      });
+
+      let ruleSuccess = 0;
+      let ruleFailed = 0;
+
+      for (const order of expiredOrders) {
+        try {
+          await processOrder(order, rule.from, rule.to);
+          ruleSuccess++;
+        } catch (error) {
+          ruleFailed++;
+          console.error(
+            `Failed to transition order ${order.orderId} (${rule.from} → ${rule.to}):`,
+            error.message,
+          );
+        }
       }
+
+      totalOrders += expiredOrders.length;
+      successCount += ruleSuccess;
+      failedCount += ruleFailed;
+
+      transitions.push({
+        from: rule.from,
+        to: rule.to,
+        processed: ruleSuccess,
+        failed: ruleFailed,
+      });
     }
 
     const finishedAt = new Date();
@@ -90,17 +101,14 @@ export const runScheduler = async () => {
     await SchedulerLog.findByIdAndUpdate(schedulerLog._id, {
       finishedAt,
       duration: finishedAt.getTime() - startedAt.getTime(),
-      totalOrders: expiredOrders.length,
+      totalOrders,
       successCount,
       failedCount,
+      transitions,
       status: SCHEDULER_STATUS.SUCCESS,
     });
 
-    return {
-      totalOrders: expiredOrders.length,
-      successCount,
-      failedCount,
-    };
+    return { totalOrders, successCount, failedCount, transitions };
   } catch (error) {
     const finishedAt = new Date();
 

@@ -37,6 +37,15 @@ const schedulerLogSchema = new mongoose.Schema(
       min: 0,
     },
 
+    transitions: [
+      {
+        from: { type: String, required: true },
+        to: { type: String, required: true },
+        processed: { type: Number, default: 0 },
+        failed: { type: Number, default: 0 },
+      },
+    ],
+
     status: {
       type: String,
       enum: Object.values(SCHEDULER_STATUS),
